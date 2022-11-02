@@ -1,5 +1,5 @@
-[![CI](https://github.com/funkwerk/cogito/workflows/CI/badge.svg)](https://github.com/funkwerk/cogito/actions?query=workflow%3ACI)
-[![License](https://img.shields.io/badge/license-MPL_2.0-blue.svg)](https://raw.githubusercontent.com/funkwerk/mocked/master/LICENSE)
+[![CI](https://github.com/funkwerk-mobility/cogito/workflows/CI/badge.svg)](https://github.com/funkwerk-mobility/cogito/actions?query=workflow%3ACI)
+[![License](https://img.shields.io/badge/license-MPL_2.0-blue.svg)](https://raw.githubusercontent.com/funkwerk-mobility/mocked/master/LICENSE)
 
 # cōgitō
 
