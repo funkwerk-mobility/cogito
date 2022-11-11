@@ -6,7 +6,7 @@ import dmd.frontend;
 import dmd.identifier;
 import dmd.globals;
 import dmd.console;
-import dmd.root.outbuffer;
+import dmd.common.outbuffer;
 
 import cogito.arguments;
 import cogito.list;
@@ -521,7 +521,7 @@ struct LocalHandler
  */
 void initialize()
 {
-    initDMD(null, [],
+    initDMD(null, null, [],
         ContractChecks(
             ContractChecking.default_,
             ContractChecking.default_,

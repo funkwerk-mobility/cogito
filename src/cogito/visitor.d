@@ -126,7 +126,7 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     private uint depth = 0U;
     private Source source_;
-    private List!TOK stack;
+    private List!EXP stack;
     private Meter* parent;
 
     extern(D) this()
