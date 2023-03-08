@@ -1,5 +1,6 @@
 import unit_threaded;
 
+import cogito.tests.compilation;
 import cogito.tests.expressions;
 import cogito.tests.functions;
 import cogito.tests.meta;
@@ -12,6 +13,7 @@ int main(string[] args)
     import unit_threaded.runner.runner: runTests;
 
     return runTests!(
+        cogito.tests.compilation,
         cogito.tests.expressions,
         cogito.tests.functions,
         cogito.tests.meta,
