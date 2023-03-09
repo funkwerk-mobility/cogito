@@ -169,6 +169,11 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
         stepInFunction!(AST.SharedStaticCtorDeclaration)(declaration);
     }
 
+    override void visit(AST.CtorDeclaration declaration)
+    {
+        stepInFunction!(AST.CtorDeclaration)(declaration);
+    }
+
     override void visit(AST.SharedStaticDtorDeclaration declaration)
     {
         debug writeln("Shared static destructor declaration ", declaration);
@@ -176,16 +181,16 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
         stepInFunction!(AST.SharedStaticDtorDeclaration)(declaration);
     }
 
-    override void visit(AST.UnionDeclaration statement)
+    override void visit(AST.UnionDeclaration unionDeclaration)
     {
-        // Unions are handled as StructDeclarations
-        super.visit(statement);
+        stepInAggregate!(AST.UnionDeclaration)(unionDeclaration);
     }
 
-    override void visit(AST.InterfaceDeclaration statement)
+    override void visit(AST.InterfaceDeclaration ifaceDeclaration)
     {
-        // Interfaces are handled as ClassDeclarations
-        super.visit(statement);
+        debug writeln("Interface declaration ", ifaceDeclaration);
+
+        stepInAggregate!(AST.InterfaceDeclaration)(ifaceDeclaration);
     }
 
     override void visit(AST.StaticForeachStatement statement)

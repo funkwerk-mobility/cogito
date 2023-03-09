@@ -531,7 +531,6 @@ void initialize()
             ContractChecking.default_
         )
     );
-    global.params.shortenedMethods = true;
 }
 
 /**
