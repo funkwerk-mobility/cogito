@@ -5,12 +5,12 @@ DUB=./tools/dmd2/linux/bin64/dub
 DFLAGS=
 
 debug: DFLAGS += -debug
+debug: build/githash.txt
 debug: dmd.a
 	$(DUB) build --build=debug --config=executable
 
 release: DC=ldmd2
 release: DUB=dub
-release: build/githash.txt
 release: build/release/bin/cogito
 	sed -e 's#v\(.*\)#build/cogito-\1#' build/githash.txt | \
 		xargs -I '{}' rm -rf '{}'
@@ -19,6 +19,7 @@ release: build/release/bin/cogito
 	cd build && sed -e 's#v\(.*\)#cogito-\1#' githash.txt | xargs -I '{}' zip -r '{}.zip' '{}'
 
 build/release/bin/cogito: DFLAGS += -release
+build/release/bin/cogito: build/githash.txt
 build/release/bin/cogito: dmd.a
 build/release/bin/cogito:
 	$(DUB) build --build=release --config=executable
@@ -26,6 +27,7 @@ build/release/bin/cogito:
 	mv build/cogito build/release/bin
 
 build/githash.txt:
+	mkdir -p build
 	git describe | tee $@
 
 build/test: dmd.a

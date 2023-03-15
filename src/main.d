@@ -6,6 +6,7 @@ import std.algorithm;
 import std.sumtype;
 import std.functional;
 import std.stdio;
+import std.range;
 
 int accumulateResult(Arguments arguments, int accumulator, Result result)
 {
@@ -48,7 +49,28 @@ int accumulateResult(Arguments arguments, int accumulator, Result result)
     return nextResult;
 }
 
+int printVersion()
+{
+    write("cōgitō " ~ import("githash.txt"));
+    write("  based on DMD " ~ import("VERSION"));
+    return 0;
+}
+
+int noFilesError()
+{
+    stderr.writeln("No input files specified.");
+    return 1;
+}
+
 mixin CLI!Arguments.main!((arguments) {
+    if (arguments.version_)
+    {
+        return printVersion();
+    }
+    if (arguments.files.empty)
+    {
+        return noFilesError();
+    }
     try
     {
         return runOnFiles(arguments.files)

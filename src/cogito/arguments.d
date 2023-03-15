@@ -62,7 +62,7 @@ private OutputFormat parseOutputFormat(string input)
 struct Arguments
 {
     /// Input files.
-    @(PositionalArgument(0).Description("Source files or directories").Required())
+    @(PositionalArgument(0).Description("Source files or directories").Optional())
     string[] files = [];
 
     /// Module threshold.
@@ -94,4 +94,11 @@ struct Arguments
             .Validation!((OutputFormat x) => true)
     )
     OutputFormat format = OutputFormat.flat;
+
+    /// Show version.
+    @(NamedArgument(["version"])
+            .Optional()
+            .Description("cōgitō version")
+    )
+    bool version_ = false;
 }

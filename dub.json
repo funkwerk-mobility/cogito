@@ -10,7 +10,7 @@
 		},
 		{
 			"dependencies": {
-				"unit-threaded": "~>2.0.3"
+				"unit-threaded": "~>2.1.4"
 			},
 			"excludedSourceFiles": [
 				"src/main.d"
@@ -39,7 +39,8 @@
 	],
 	"stringImportPaths": [
 		"tools/dmd2/src/dmd/dmd/res",
-		"include"
+		"include",
+		"build"
 	],
 	"targetPath": "build",
 	"versions": [

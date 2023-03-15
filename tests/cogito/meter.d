@@ -6,6 +6,7 @@ import cogito.meter;
 import std.array;
 import dmd.identifier;
 import dmd.globals;
+import dmd.location;
 import std.algorithm;
 import std.sumtype;
 

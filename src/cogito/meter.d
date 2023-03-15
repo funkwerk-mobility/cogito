@@ -7,6 +7,7 @@ import dmd.identifier;
 import dmd.globals;
 import dmd.console;
 import dmd.common.outbuffer;
+import dmd.location;
 
 import cogito.arguments;
 import cogito.list;
