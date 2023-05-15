@@ -32,6 +32,7 @@ Property name | Allowed values | Description
 --aggregate-threshold | Positive numbers | Fail if an aggregate score exceeds this threshold.
 --module-threshold | Positive numbers | Fail if a function score exceeds this threshold.
 --format | `flat`, `verbose`, `debug` and `silent` | See below.
+--config | string | Configuration file.
 --help | – | Show a help message.
 
 ## Formats
@@ -47,6 +48,27 @@ Debug output adds column numbers and scores inside aggregates.
 Silent format produces no output, but returns an error if one of the
 thresholds is exceeded.
 
+## Configuration
+
+A configuration file can be used to specify different scores for specific modules.
+The configuration is a list of modules names in brackets with the corresponding
+score, followed by symbol specifications in this module. For example:
+
+```
+[cogito.list = 123]
+MyStruct = 12
+MyStruct.f = 8
+
+[cogito.meter = 32]
+```
+
+If an element doesn't exceed the normal score, but there is a configuration for
+it, it also causes an error, because the configuration in this case should be removed.
+
+The default configuration file is `cogito.conf`. Another file name can be
+specified with `--config` command line option. Set `--config` to `-` to read
+from the standard input.
+
 ## Return codes
 
 The return code of the program provides some information on what kind of error
@@ -58,5 +80,6 @@ occurred.
 - 3: Function threshold violation
 - 4: Aggregate threshold violation
 - 5: Module threshold violation
+- 6: Redundant threshold configuration found
 
 [cognitive complexity]: https://sonarsource.com/docs/CognitiveComplexity.pdf
