@@ -16,6 +16,7 @@ private enum string returnCodes = q"HELP
     3  Function threshold violation
     4  Aggregate threshold violation
     5  Module threshold violation
+    6  Redundant threshold configuration found
 HELP";
 
 /**
@@ -101,4 +102,10 @@ struct Arguments
             .Description("cōgitō version")
     )
     bool version_ = false;
+
+    @(NamedArgument(["config"])
+            .Optional()
+            .Description("Configuration file")
+     )
+    string config;
 }

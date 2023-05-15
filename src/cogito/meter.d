@@ -10,6 +10,7 @@ import dmd.common.outbuffer;
 import dmd.location;
 
 import cogito.arguments;
+import cogito.configuration;
 import cogito.list;
 import std.algorithm;
 import std.conv;
@@ -140,31 +141,53 @@ struct Meter
         this.type = type;
     }
 
-    /**
-     * Returns: Type of the exceeded threshold or null.
-     */
-    Nullable!(Threshold.Type) isAbove(Threshold threshold)
+    private uint thresholdFor(ref Threshold threshold)
     {
-        if (threshold.noneSet)
+        if (this.type == Meter.Type.callable)
         {
-            return typeof(return)();
-        }
-        if (threshold.function_ != 0
-                && this.type == Type.callable
-                && this.score > threshold.function_)
-        {
-            return nullable(Threshold.Type.function_);
-        }
-        else if (threshold.aggregate != 0
-                && this.type != Type.callable // Aggregate.
-                && this.score > threshold.aggregate)
-        {
-            return nullable(Threshold.Type.aggregate);
+            return threshold.function_;
         }
         else
         {
-            return reduce!((accum, x) => accum.isNull ? x.isAbove(threshold) : accum)(typeof(return)(), this.inner[]);
+            return threshold.aggregate;
         }
+    }
+
+    /**
+     * Returns: Type of the exceeded threshold or null.
+     */
+    ThresholdResult isAbove(Threshold threshold, string[] path)
+    {
+        const moduleName = path.front;
+        ExcludedModule excludedModule;
+
+        if (moduleName in threshold.configuration.excludedModules)
+        {
+            excludedModule = threshold.configuration.excludedModules[moduleName];
+        }
+        path ~= name.idup;
+        const fullName = path[1 .. $].join('.');
+        const uint* excludedScore = fullName in excludedModule;
+        auto currentThreshold = thresholdFor(threshold);
+
+        if (excludedScore !is null && this.score <= currentThreshold)
+        {
+            return ThresholdResult.redundant;
+        }
+        else if (excludedScore !is null)
+        {
+            currentThreshold = *excludedScore;
+        }
+        if (threshold.noneSet)
+        {
+            return ThresholdResult.success;
+        }
+        if (currentThreshold != 0 && this.score > currentThreshold)
+        {
+            return this.type == Type.callable ? ThresholdResult.function_ : ThresholdResult.aggregate;
+        }
+        return reduce!((accum, x) => accum == ThresholdResult.success ? x.isAbove(threshold, path) : accum)(
+            typeof(return)(), this.inner[]);
     }
 
     mixin Ruler!();
@@ -281,18 +304,23 @@ if (isCallable!sink)
     void report(Threshold threshold)
     {
         const sourceScore = this.source.score;
+        const moduleName = this.source.moduleName;
 
         if (threshold.noneSet
-                || (threshold.module_ != 0 && sourceScore > threshold.module_))
+            || (threshold.module_ != 0 && sourceScore > threshold.module_)
+            || (threshold.module_ != 0 && sourceScore <= threshold.module_ && moduleName in threshold.configuration))
         {
             sink("module ");
-            sink(this.source.moduleName);
+            sink(moduleName);
             sink(": ");
             sink(sourceScore.to!string);
             sink(" (");
             sink(this.source.filename);
-            sink(")");
-            sink("\n");
+            if (threshold.module_ != 0 && sourceScore <= threshold.module_ && moduleName in threshold.configuration)
+            {
+                sink(", the module shouldn't be excluded anymore");
+            }
+            sink(")\n");
         }
 
         foreach (ref meter; this.source.inner[])
@@ -305,17 +333,18 @@ if (isCallable!sink)
             Threshold threshold, const string[] path)
     {
         const noneSet = threshold.noneSet;
-        const exceededThreshold = meter.isAbove(threshold);
+        const exceededThreshold = meter.isAbove(threshold, [this.source.moduleName] ~ path);
 
-        if (exceededThreshold.isNull && !noneSet)
+        if (exceededThreshold == ThresholdResult.success && !noneSet)
         {
             return;
         }
         const nameParts = path ~ [meter.name.idup];
 
         if (noneSet
-                || (meter.type == Meter.Type.callable && exceededThreshold == nullable(Threshold.Type.function_))
-                || (meter.type != Meter.Type.callable && exceededThreshold == nullable(Threshold.Type.aggregate)))
+                || (meter.type == Meter.Type.callable && exceededThreshold == ThresholdResult.function_)
+                || (meter.type != Meter.Type.callable && exceededThreshold == ThresholdResult.aggregate)
+                || exceededThreshold == ThresholdResult.redundant)
         {
             sink(this.source.filename);
             sink(":");
@@ -326,6 +355,10 @@ if (isCallable!sink)
             sink(nameParts.join("."));
             sink(": ");
             sink(meter.score.to!string);
+            if (exceededThreshold == ThresholdResult.redundant)
+            {
+                sink(" (this symbol shouldn't be excluded anymore)");
+            }
             sink("\n");
         }
         meter.inner[].each!(meter => this.traverse(meter, threshold, nameParts));
@@ -363,23 +396,49 @@ struct Source
     /**
      * Returns: Type of the exceeded threshold or null.
      */
-    Nullable!(Threshold.Type) isAbove(Threshold threshold)
+    ThresholdResult isAbove(Threshold threshold)
     {
+        auto thisModuleThreshold = threshold.module_;
+
+        if (this.moduleName in threshold.configuration)
+        {
+            // Report if the exclusion isn't required anymore.
+            if (this.score <= thisModuleThreshold)
+            {
+                return ThresholdResult.redundant;
+            }
+            thisModuleThreshold = threshold.configuration[this.moduleName];
+        }
         if (threshold.noneSet)
         {
-            return typeof(return)();
+            return ThresholdResult.success;
         }
-        else if (threshold.module_ != 0 && this.score > threshold.module_)
+        else if (thisModuleThreshold != 0 && this.score > thisModuleThreshold)
         {
-            return nullable(Threshold.Type.module_);
+            return ThresholdResult.module_;
         }
         else
         {
-            return reduce!((accum, x) => accum.isNull ? x.isAbove(threshold) : accum)(typeof(return)(), this.inner[]);
+            alias accumulateResult = (accum, x) =>
+                accum == ThresholdResult.success ? x.isAbove(threshold, [this.moduleName]) : accum;
+
+            return reduce!accumulateResult(ThresholdResult.success, this.inner[]);
         }
     }
 
     mixin Ruler!();
+}
+
+/**
+ * Threshold result.
+ */
+enum ThresholdResult
+{
+    success, /// Successful.
+    function_, /// Function.
+    aggregate, /// Aggregate.
+    module_, /// Module.
+    redundant, /// Redundant threshold.
 }
 
 /**
@@ -406,6 +465,9 @@ struct Threshold
     /// Module threshold.
     uint module_;
 
+    /// Module-symbol exclusion map.
+    Configuration configuration;
+
     /**
      * Returns: Whether none threshold is set.
      */
@@ -423,12 +485,24 @@ struct Threshold
  *     threshold = Maximum acceptable scores.
  *     format = Output format.
  *
- * Returns: $(D_KEYWORD true) if the score exceeds the threshold, otherwise
- *          returns $(D_KEYWORD false).
+ * Returns: Type of the violated threshold, otherwise nothing.
  */
-Nullable!(Threshold.Type) report(Source source, Threshold threshold, OutputFormat format)
+ThresholdResult report(Source source, Threshold threshold, OutputFormat format)
 {
-    const aboveAnyThreshold = source.isAbove(threshold);
+    ThresholdResult aboveAnyThreshold = source.isAbove(threshold);
+
+    if (threshold.configuration.excludedCompletely(source.moduleName))
+    {
+        if (aboveAnyThreshold == ThresholdResult.success)
+        {
+            write("Module " ~ source.moduleName ~ " is excluded, but it passes all checks.\n");
+            aboveAnyThreshold = ThresholdResult.redundant;
+        }
+        else
+        {
+            aboveAnyThreshold = ThresholdResult.success;
+        }
+    }
 
     if (format == OutputFormat.silent)
     {
@@ -442,7 +516,7 @@ Nullable!(Threshold.Type) report(Source source, Threshold threshold, OutputForma
     {
         FlatReporter!write(source).report(Threshold());
     }
-    else if (!aboveAnyThreshold.isNull || threshold.noneSet)
+    else if (aboveAnyThreshold != ThresholdResult.success || threshold.noneSet)
     {
         FlatReporter!write(source).report(threshold);
     }
