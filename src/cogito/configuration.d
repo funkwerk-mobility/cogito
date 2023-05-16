@@ -73,6 +73,23 @@ struct Configuration
     {
         return !excludedModules[moduleName].threshold.get;
     }
+
+    /**
+     * Tells whether the module is excluded completely, without overriding the
+     * module score or specifying single symbols in the module.
+     *
+     * Params:
+     *     moduleName = Module name.
+     *
+     * Returns: $(D_KEYWORD true) if the module is excluded, $(D_KEYWORD false)
+     *          otherwise.
+     */
+    bool excludedCompletely(string moduleName)
+    {
+        return moduleName in excludedModules
+            && excludedModules[moduleName].threshold.isNull
+            && excludedModules[moduleName].excludedSymbols.empty;
+    }
 }
 
 class ConfigurationException : Exception

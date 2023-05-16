@@ -489,7 +489,20 @@ struct Threshold
  */
 ThresholdResult report(Source source, Threshold threshold, OutputFormat format)
 {
-    const aboveAnyThreshold = source.isAbove(threshold);
+    ThresholdResult aboveAnyThreshold = source.isAbove(threshold);
+
+    if (threshold.configuration.excludedCompletely(source.moduleName))
+    {
+        if (aboveAnyThreshold == ThresholdResult.success)
+        {
+            write("Module " ~ source.moduleName ~ " is excluded, but it passes all checks.\n");
+            aboveAnyThreshold = ThresholdResult.redundant;
+        }
+        else
+        {
+            aboveAnyThreshold = ThresholdResult.success;
+        }
+    }
 
     if (format == OutputFormat.silent)
     {
