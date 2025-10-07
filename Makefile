@@ -1,4 +1,4 @@
-.PHONY: clean debug release test install
+.PHONY: clean debug release test
 
 DC=ldmd2
 DUB=dub
