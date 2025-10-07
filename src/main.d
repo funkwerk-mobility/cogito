@@ -49,8 +49,11 @@ int accumulateResult(Arguments arguments, Configuration configuration, int accum
 
 int printVersion()
 {
-    write("cōgitō " ~ import("githash.txt"));
-    write("  based on DMD " ~ import("VERSION"));
+    import std.json : parseJSON;
+    import std.string : strip;
+
+    writeln("cōgitō " ~ import("build/githash.txt").strip);
+    writeln("  DMD frontend " ~ import("dub.selections.json").parseJSON["versions"]["dmd"].str);
     return 0;
 }
 
