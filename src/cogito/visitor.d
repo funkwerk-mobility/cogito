@@ -79,8 +79,6 @@ private mixin template VisitorHelper()
 
     private void stepInAggregate(Declaration : AST.Dsymbol)(Declaration declaration)
     {
-        debug writeln("Aggregate declaration ", declaration);
-
         auto meterType = declarationType(declaration);
         auto newMeter = Meter(declaration.ident, declaration.loc, meterType);
         auto parent = this.parent;
@@ -157,15 +155,12 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.DebugStatement statement)
     {
-        debug writeln("Debug statement ", statement);
         // Handled as ConditionalStatement or Condition
         super.visit(statement);
     }
 
     override void visit(AST.SharedStaticCtorDeclaration declaration)
     {
-        debug writeln("Shared static constructor declaration ", declaration);
-
         stepInFunction!(AST.SharedStaticCtorDeclaration)(declaration);
     }
 
@@ -176,8 +171,6 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.SharedStaticDtorDeclaration declaration)
     {
-        debug writeln("Shared static destructor declaration ", declaration);
-
         stepInFunction!(AST.SharedStaticDtorDeclaration)(declaration);
     }
 
@@ -188,22 +181,16 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.InterfaceDeclaration ifaceDeclaration)
     {
-        debug writeln("Interface declaration ", ifaceDeclaration);
-
         stepInAggregate!(AST.InterfaceDeclaration)(ifaceDeclaration);
     }
 
     override void visit(AST.StaticForeachStatement statement)
     {
-        debug writeln("Static foreach statement ", statement);
-
         stepInStaticDeclaration(statement);
     }
 
     override void visit(AST.GotoStatement statement)
     { // There are also GotoDefaultStatement and GotoCaseStatement
-        debug writeln("Goto statement ", statement);
-
         increase;
         super.visit(statement);
     }
@@ -220,29 +207,21 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.FuncLiteralDeclaration declaration)
     {
-        debug writeln("Function literal ", declaration);
-
         stepInFunction(declaration);
     }
 
     override void visit(AST.FuncDeclaration declaration)
     {
-        debug writeln("Function declaration ", declaration);
-
         stepInFunction(declaration);
     }
 
     override void visit(AST.DtorDeclaration declaration)
     {
-        debug writeln("Destructor ", declaration);
-
         stepInFunction(declaration);
     }
 
     override void visit(AST.TemplateDeclaration declaration)
     {
-        debug writeln("Template declaration ", declaration);
-
         if (declaration.onemember !is null && declaration.members.length == 1)
         {
             // Ignore the template if it has only one member of the same name.
@@ -256,8 +235,6 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.BinExp expression)
     {
-        debug writeln("Binary expression ", expression);
-
         if (expression.isLogicalExp()) {
             // Each operator like && or || is counted once in an expression
             // chain.
@@ -278,8 +255,6 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.IfStatement statement)
     {
-        debug writeln("if statement ", statement);
-
         statement.condition.accept(this);
 
         if (statement.ifbody)
@@ -324,8 +299,6 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.StaticIfDeclaration declaration)
     {
-        debug writeln("static if declaration ", declaration);
-
         declaration.condition.accept(this);
 
         if (declaration.decl)
@@ -380,8 +353,6 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.ConditionalStatement statement)
     {
-        debug writeln("Conditional statement ", statement);
-
         statement.condition.accept(this);
 
         if (statement.ifbody)
@@ -425,43 +396,31 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.StaticForeachDeclaration foreachDeclaration)
     {
-        debug writeln("Static foreach declaration ", foreachDeclaration);
-
         stepInStaticDeclaration(foreachDeclaration);
     }
 
     override void visit(AST.WhileStatement whileStatement)
     {
-        debug writeln("while statement ", whileStatement);
-
         stepInLoop(whileStatement);
     }
 
     override void visit(AST.DoStatement doStatement)
     {
-        debug writeln("do statement ", doStatement);
-
         stepInLoop(doStatement);
     }
 
     override void visit(AST.ForStatement forStatement)
     {
-        debug writeln("for statement ", forStatement);
-
         stepInLoop(forStatement);
     }
 
     override void visit(AST.ForeachStatement foreachStatement)
     {
-        debug writeln("foreach statement ", foreachStatement);
-
         stepInLoop(foreachStatement);
     }
 
     override void visit(AST.Module moduleDeclaration)
     {
-        debug writeln("Module declaration ", moduleDeclaration);
-
         this.source_.moduleName = moduleName(moduleDeclaration.md);
 
         super.visit(moduleDeclaration);
@@ -469,22 +428,16 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.CondExp expression)
     {
-        debug writeln("Ternary operator ", expression);
-
         stepInLoop(expression);
     }
 
     override void visit(AST.SwitchStatement statement)
     {
-        debug writeln("Switch ", statement);
-
         stepInLoop(statement);
     }
 
     override void visit(AST.TryCatchStatement statement)
     {
-        debug writeln("try-catch statement ", statement);
-
         if (statement._body)
         {
             increase(this.depth);
@@ -498,29 +451,21 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(AST.BreakStatement statement)
     {
-        debug writeln("Break ", statement.ident);
-
         stepInStatementWithLabel(statement);
     }
 
     override void visit(AST.ContinueStatement statement)
     {
-        debug writeln("Label ", statement);
-
         stepInStatementWithLabel(statement);
     }
 
     override void visit(AST.PostBlitDeclaration declaration)
     {
-        debug writeln("Blit ", declaration);
-
         stepInFunction(declaration);
     }
 
     override void visit(AST.VersionCondition condition)
     {
-        debug writeln("Version condition ", condition);
-
         stepInStaticDeclaration(condition);
     }
 

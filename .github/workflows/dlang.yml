@@ -14,16 +14,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-   
+
+    - name: Setup DMD
+      uses: dlang-community/setup-dlang@v1
+      with:
+        compiler: dmd-2.110.0
+
     - name: Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: '~/.dub'
         key: ${{ runner.os }}-test-${{ hashFiles('**/dub.json') }}
         restore-keys: ${{ runner.os }}-test-
-
-    - name: Install dependencies
-      run: make install
 
     - name: Run tests
       run: make test
@@ -33,16 +35,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-   
+
+    - name: Setup DMD
+      uses: dlang-community/setup-dlang@v1
+      with:
+        compiler: dmd-2.110.0
+
     - name: Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: '~/.dub'
         key: ${{ runner.os }}-selftest-${{ hashFiles('**/dub.json') }}
         restore-keys: ${{ runner.os }}-selftest-
-
-    - name: Install dependencies
-      run: make install
 
     - name: Build binary
       run: make build/release/bin/cogito
@@ -59,10 +63,10 @@ jobs:
     - name: Setup DMD
       uses: dlang-community/setup-dlang@v1
       with:
-        compiler: dmd-2.100.2
+        compiler: dmd-2.110.0
 
     - name: Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: '~/.dub'
         key: ${{ runner.os }}-audit-${{ hashFiles('**/dub.json') }}

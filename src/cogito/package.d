@@ -14,6 +14,8 @@ import std.range;
 
 private Result runOnFile(string file)
 {
+    import dmd.common.charactertables : IdentifierCharLookup, IdentifierTable;
+
     initialize();
     LocalHandler localHandler;
     diagnosticHandler = &localHandler.handler;
@@ -23,6 +25,8 @@ private Result runOnFile(string file)
         diagnosticHandler = null;
         deinitialize();
     }
+    global.compileEnv.cCharLookupTable = IdentifierCharLookup.forTable(IdentifierTable.LR);
+    global.compileEnv.dCharLookupTable = IdentifierCharLookup.forTable(IdentifierTable.LR);
     auto tree = parseModule!AST(file);
 
     if (tree.diagnostics.hasErrors())
