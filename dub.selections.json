@@ -1,8 +1,8 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"argparse": "1.2.0",
-		"dmd": "2.110.0",
+		"argparse": "2.0.2",
+		"dmd": "2.111.0",
 		"unit-threaded": "2.1.6"
 	}
 }

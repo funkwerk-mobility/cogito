@@ -14,7 +14,7 @@ import std.sumtype;
 unittest
 {
     enum string filename = "filename.d";
-    auto meter = Meter(new Identifier(""), Loc(filename, 2, 1), Meter.Type.callable);
+    auto meter = Meter(new Identifier(""), SourceLoc(filename, 2, 1), Meter.Type.callable);
     auto meters = List!Meter();
 
     meter.ownScore = 3;
@@ -33,7 +33,7 @@ unittest
 unittest
 {
     enum string filename = "filename.d";
-    auto meter = Meter(new Identifier("f"), Loc(filename, 2, 1), Meter.Type.callable);
+    auto meter = Meter(new Identifier("f"), SourceLoc(filename, 2, 1), Meter.Type.callable);
     auto meters = List!Meter();
 
     meter.ownScore = 3;
@@ -52,7 +52,7 @@ unittest
 unittest
 {
     enum string filename = "filename.d";
-    auto meter = Meter(new Identifier("I"), Loc(filename, 2, 1), Meter.Type.interface_);
+    auto meter = Meter(new Identifier("I"), SourceLoc(filename, 2, 1), Meter.Type.interface_);
     auto meters = List!Meter();
 
     meter.ownScore = 3;

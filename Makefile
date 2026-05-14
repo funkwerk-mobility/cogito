@@ -1,4 +1,4 @@
-.PHONY: clean debug release test
+.PHONY: clean debug install release test
 
 DC=ldmd2
 DUB=dub
@@ -31,6 +31,9 @@ build/test: src/**/*.d
 test: DFLAGS += -debug
 test: build/test
 	./build/test -s
+
+install:
+	@:
 
 clean:
 	rm -rf build/*
