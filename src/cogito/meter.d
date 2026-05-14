@@ -46,7 +46,7 @@ struct ScoreScope
     Identifier identifier;
 
     /// Source position.
-    Loc location;
+    SourceLoc location;
 }
 
 /**
@@ -117,13 +117,13 @@ struct Meter
     }
 
     /// Gets identifier location.
-    @property ref Loc location() return
+    @property ref SourceLoc location() return
     {
         return this.scoreScope.location;
     }
 
     /// Sets identifier location.
-    @property void location(ref Loc location)
+    @property void location(ref SourceLoc location)
     {
         this.scoreScope.location = location;
     }
@@ -134,7 +134,7 @@ struct Meter
      *     location = Identifier location.
      *     type = Symbol type.
      */
-    public this(Identifier identifier, Loc location, Type type)
+    public this(Identifier identifier, SourceLoc location, Type type)
     {
         this.identifier = identifier;
         this.location = location;
@@ -549,7 +549,7 @@ void printErrors(List!CognitiveError errors)
 
 struct CognitiveError
 {
-    Loc location;
+    SourceLoc location;
     Color headerColor;
     const(char)* header;
     RefCounted!OutBuffer message;
@@ -559,7 +559,7 @@ struct LocalHandler
 {
     List!CognitiveError errors;
 
-    bool handler(const ref Loc location,
+    bool handler(const ref SourceLoc location,
         Color headerColor,
         const(char)* header,
         const(char)* messageFormat,

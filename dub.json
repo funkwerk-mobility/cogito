@@ -25,8 +25,8 @@
 		}
 	],
 	"dependencies": {
-		"argparse": "~>1.2.0",
-		"dmd": "~>2.110.0"
+		"argparse": "~>2.0.2",
+		"dmd": "~>2.111.0"
 	},
 	"description": " Cognitive Complexity code metric for D",
 	"importPaths": ["src"],

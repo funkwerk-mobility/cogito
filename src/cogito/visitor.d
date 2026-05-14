@@ -3,7 +3,6 @@ module cogito.visitor;
 import core.stdc.string;
 import dmd.ast_node;
 import dmd.astcodegen;
-import dmd.parsetimevisitor;
 import dmd.visitor;
 import dmd.tokens;
 
@@ -65,7 +64,7 @@ private mixin template VisitorHelper()
 
     private void stepInFunction(T : AST.FuncDeclaration)(T declaration)
     {
-        auto newMeter = Meter(declaration.ident, declaration.loc, Meter.Type.callable);
+        auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, Meter.Type.callable);
         auto parent = this.parent;
         this.parent = &newMeter;
 
@@ -80,7 +79,7 @@ private mixin template VisitorHelper()
     private void stepInAggregate(Declaration : AST.Dsymbol)(Declaration declaration)
     {
         auto meterType = declarationType(declaration);
-        auto newMeter = Meter(declaration.ident, declaration.loc, meterType);
+        auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, meterType);
         auto parent = this.parent;
         this.parent = &newMeter;
 

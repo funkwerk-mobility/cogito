@@ -27,6 +27,7 @@ enum OutputFormat
     silent,
     flat,
     verbose,
+    @AllowedValues("debug")
     debug_,
 }
 
@@ -35,26 +36,6 @@ private enum string allowedOutputFormat(OutputFormat Member) =
 private enum string[] allowedOutputFormats = [
     staticMap!(allowedOutputFormat, EnumMembers!OutputFormat)
 ];
-
-private OutputFormat parseOutputFormat(string input)
-{
-    switch (input)
-    {
-        case "debug":
-            return OutputFormat.debug_;
-        case "silent":
-            return OutputFormat.silent;
-        case "flat":
-            return OutputFormat.flat;
-        case "verbose":
-            return OutputFormat.verbose;
-        default:
-            enum string validValues = allowedOutputFormats.join(',');
-            enum string errorFormat =
-                "Invalid value '%s' for argument '--format'.\nValid argument values are: %s";
-            throw new Exception(format!errorFormat(input, validValues));
-    }
-}
 
 /**
  * Arguments supported by the CLI.
@@ -89,10 +70,7 @@ struct Arguments
 
     /// Output format.
     @(NamedArgument
-            .AllowedValues!allowedOutputFormats
-            .PreValidation!((string x) => true)
-            .Parse!parseOutputFormat
-            .Validation!((OutputFormat x) => true)
+            .Optional()
     )
     OutputFormat format = OutputFormat.flat;
 
