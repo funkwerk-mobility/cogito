@@ -52,7 +52,7 @@ jobs:
       run: dub build --build=release --config=executable
 
     - name: Run
-      run: find src -name "*.d" -print0 | xargs -0 ./build/release/bin/cogito
+      run: find src -name "*.d" -print0 | xargs -0 ./build/cogito
 
   audit:
     runs-on: ubuntu-latest
