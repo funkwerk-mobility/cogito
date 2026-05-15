@@ -6,7 +6,11 @@
 		{
 			"mainSourceFile": "src/main.d",
 			"name": "executable",
-			"targetType": "executable"
+			"targetType": "executable",
+			"preBuildCommands": [
+				"mkdir -p build",
+				"git describe --always > build/githash.txt"
+			]
 		},
 		{
 			"dependencies": {
