@@ -7,12 +7,12 @@ cōgitō analyses D code and calculates its [cognitive complexity].
 
 ## Installing and usage
 
-Run `make install build/release/bin/cogito`.
+Run `dub build --build=release --config=executable`.
 
-It will download and install the frontend and build a binary.
+It will download dependencies and build a binary.
 Then you can run it on some D source:
 
-Run `./build/release/bin/cogito src/main.d`.
+Run `./build/cogito src/main.d`.
 
 ## Example output
 
