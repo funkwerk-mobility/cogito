@@ -19,10 +19,10 @@
 			"excludedSourceFiles": [
 				"src/main.d"
 			],
-			"mainSourceFile": "tests/app.d",
+			"mainSourceFile": "test/app.d",
 			"name": "unittest",
 			"sourcePaths": [
-				"tests"
+				"test"
 			],
 			"targetName": "test",
 			"targetType": "executable"

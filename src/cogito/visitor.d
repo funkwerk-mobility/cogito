@@ -1,8 +1,10 @@
 module cogito.visitor;
 
 import core.stdc.string;
+import dmd.astenums : VarArg;
 import dmd.ast_node;
 import dmd.astcodegen;
+import dmd.frontend;
 import dmd.visitor;
 import dmd.tokens;
 
@@ -65,6 +67,9 @@ private mixin template VisitorHelper()
     private void stepInFunction(T : AST.FuncDeclaration)(T declaration)
     {
         auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, Meter.Type.callable);
+
+        newMeter.parameterTypes = parameterTypes(declaration);
+
         auto parent = this.parent;
         this.parent = &newMeter;
 
@@ -115,6 +120,61 @@ private mixin template VisitorHelper()
         }
         super.visit(statement);
     }
+}
+
+private string parameterTypes(T : AST.FuncDeclaration)(T declaration)
+{
+    import std.array : appender;
+    import std.string : fromStringz;
+
+    if (declaration.type is null)
+    {
+        return "()";
+    }
+
+    auto functionType = declaration.type.toTypeFunction;
+
+    if (functionType is null)
+    {
+        return "()";
+    }
+
+    auto signature = appender!string;
+
+    signature.put("(");
+
+    foreach (index, parameter; functionType.parameterList)
+    {
+        if (index > 0)
+        {
+            signature.put(", ");
+        }
+        if (parameter is null || parameter.type is null)
+        {
+            signature.put("?");
+            continue;
+        }
+        signature.put(parameter.type.toChars().fromStringz);
+    }
+
+    final switch (functionType.parameterList.varargs)
+    {
+        case VarArg.none:
+        case VarArg.KRvariadic:
+            break;
+        case VarArg.variadic:
+        case VarArg.typesafe:
+            if (functionType.parameterList.length > 0)
+            {
+                signature.put(", ");
+            }
+            signature.put("...");
+            break;
+    }
+
+    signature.put(")");
+
+    return signature.data;
 }
 
 extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
