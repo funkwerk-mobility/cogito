@@ -66,11 +66,10 @@ private mixin template VisitorHelper()
 
     private void stepInFunction(T : AST.FuncDeclaration)(T declaration)
     {
-        auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, Meter.Type.callable);
-
-        newMeter.parameterTypes = parameterTypes(declaration);
-
+        auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, Meter.Type.callable,
+            parameterTypes(declaration));
         auto parent = this.parent;
+
         this.parent = &newMeter;
 
         ++this.depth;
@@ -122,39 +121,33 @@ private mixin template VisitorHelper()
     }
 }
 
-private string parameterTypes(T : AST.FuncDeclaration)(T declaration)
+private string[] parameterTypes(T : AST.FuncDeclaration)(T declaration)
 {
-    import std.array : appender;
     import std.string : fromStringz;
+
+    string[] parameterTypes = null;
 
     if (declaration.type is null)
     {
-        return "()";
+        return parameterTypes;
     }
 
     auto functionType = declaration.type.toTypeFunction;
 
     if (functionType is null)
     {
-        return "()";
+        return parameterTypes;
     }
 
-    auto signature = appender!string;
-
-    signature.put("(");
 
     foreach (index, parameter; functionType.parameterList)
     {
-        if (index > 0)
-        {
-            signature.put(", ");
-        }
         if (parameter is null || parameter.type is null)
         {
-            signature.put("?");
+            parameterTypes ~= "?";
             continue;
         }
-        signature.put(parameter.type.toChars().fromStringz);
+        parameterTypes ~= parameter.type.toChars.fromStringz.idup;
     }
 
     final switch (functionType.parameterList.varargs)
@@ -164,17 +157,11 @@ private string parameterTypes(T : AST.FuncDeclaration)(T declaration)
             break;
         case VarArg.variadic:
         case VarArg.typesafe:
-            if (functionType.parameterList.length > 0)
-            {
-                signature.put(", ");
-            }
-            signature.put("...");
+            parameterTypes ~= "...";
             break;
     }
 
-    signature.put(")");
-
-    return signature.data;
+    return parameterTypes;
 }
 
 extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
@@ -201,7 +188,7 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
      */
     @property ref List!Meter meter()
     {
-        return this.parent is null ? this.source_.inner : this.parent.inner;
+        return (this.parent is null) ? this.source_.inner : this.parent.inner;
     }
 
     /**

@@ -56,7 +56,7 @@ struct ScoreScope
 struct Meter
 {
     private ScoreScope scoreScope;
-    private string parameterTypes_;
+    private string[] parameterTypes;
 
     /// Symbol type.
     enum Type
@@ -117,16 +117,6 @@ struct Meter
         }
     }
 
-    @property string signature() const
-    {
-        return this.name.idup ~ this.parameterTypes_;
-    }
-
-    @property void parameterTypes(string parameterTypes)
-    {
-        this.parameterTypes_ = parameterTypes;
-    }
-
     /// Gets identifier location.
     @property ref SourceLoc location() return
     {
@@ -144,9 +134,9 @@ struct Meter
      *     identifier = Identifier.
      *     location = Identifier location.
      *     type = Symbol type.
+     *     parameterTypes = Function parameter types (only for functions).
      */
-    public this(Identifier identifier, SourceLoc location, Type type,
-            string parameterTypes = null)
+    public this(Identifier identifier, SourceLoc location, Type type, string[] parameterTypes = null)
     {
         this.identifier = identifier;
         this.location = location;
@@ -172,34 +162,19 @@ struct Meter
     ThresholdResult isAbove(Threshold threshold, string[] path)
     {
         const moduleName = path.front;
-        ExcludedModule excludedModule;
-
-        if (moduleName in threshold.configuration.excludedModules)
-        {
-            excludedModule = threshold.configuration.excludedModules[moduleName];
-        }
-
-        const fullName = (path ~ [name.idup])[1 .. $].join('.');
-        const fullSignature = (path ~ [signature])[1 .. $].join('.');
-        const uint* excludedScore = fullSignature in excludedModule;
-        const uint* fallbackScore = fullName in excludedModule;
+        const symbolPath = (path ~ [name.idup])[1 .. $];
+        const configuredThreshold = (this.type == Meter.Type.callable)
+            ? threshold.configuration.lookup(moduleName, symbolPath, this.parameterTypes)
+            : threshold.configuration.lookup(moduleName, symbolPath);
         auto currentThreshold = thresholdFor(threshold);
 
-        if (excludedScore !is null && this.score <= currentThreshold)
+        if (!configuredThreshold.isNull && this.score <= currentThreshold)
         {
             return ThresholdResult.redundant;
         }
-        else if (excludedScore !is null)
+        else if (!configuredThreshold.isNull)
         {
-            currentThreshold = *excludedScore;
-        }
-        else if (fallbackScore !is null && this.score <= currentThreshold)
-        {
-            return ThresholdResult.redundant;
-        }
-        else if (fallbackScore !is null)
-        {
-            currentThreshold = *fallbackScore;
+            currentThreshold = configuredThreshold.get;
         }
         if (threshold.noneSet)
         {
