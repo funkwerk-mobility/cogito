@@ -19,7 +19,7 @@ struct ExcludedModule
 
     public this(uint threshold)
     {
-        this.threshold_ = nullable(threshold);
+        this.threshold_ = threshold;
     }
 
     @property Nullable!uint threshold() const @nogc nothrow pure @safe
@@ -27,20 +27,44 @@ struct ExcludedModule
         return this.threshold_;
     }
 
-    uint* opBinaryRight(string op : "in")(string symbolName)
+    bool opBinaryRight(string op : "in")(string symbolName)
     {
-        return symbolName in excludedSymbols;
+        return (symbolName in excludedSymbols) ? true : false;
     }
 
     uint opIndex(string symbolName)
     in(symbolName in this)
     {
-        return !excludedSymbols[symbolName];
+        return excludedSymbols[symbolName];
     }
 
     void opIndexAssign(uint threshold, string symbolName)
     {
-        this.excludedSymbols[symbolName] = threshold;
+        excludedSymbols[symbolName] = threshold;
+    }
+
+    Nullable!uint lookup(const(string)[] symbolPath, const(string)[] parameterTypes)
+    {
+        const exactKey = symbolPath.join(".") ~ "(" ~ parameterTypes.join(", ") ~ ")";
+
+        if (auto threshold = exactKey in excludedSymbols)
+        {
+            return Nullable!uint(*threshold);
+        }
+
+        return this.lookup(symbolPath);
+    }
+
+    Nullable!uint lookup(const(string)[] symbolPath)
+    {
+        const key = symbolPath.join(".");
+
+        if (const threshold = key in excludedSymbols)
+        {
+            return Nullable!uint(*threshold);
+        }
+
+        return Nullable!uint();
     }
 }
 
@@ -71,7 +95,7 @@ struct Configuration
     uint opIndex(string moduleName)
     in(moduleName in this)
     {
-        return !excludedModules[moduleName].threshold.get;
+        return excludedModules[moduleName].threshold.get;
     }
 
     /**
@@ -89,6 +113,26 @@ struct Configuration
         return moduleName in excludedModules
             && excludedModules[moduleName].threshold.isNull
             && excludedModules[moduleName].excludedSymbols.empty;
+    }
+
+    Nullable!uint lookup(string moduleName, const(string)[] symbolPath)
+    {
+        if (auto excludedModule = moduleName in this.excludedModules)
+        {
+            return excludedModule.lookup(symbolPath);
+        }
+
+        return Nullable!uint();
+    }
+
+    Nullable!uint lookup(string moduleName, const(string)[] symbolPath, const(string)[] parameterTypes)
+    {
+        if (auto excludedModule = moduleName in this.excludedModules)
+        {
+            return excludedModule.lookup(symbolPath, parameterTypes);
+        }
+
+        return Nullable!uint();
     }
 }
 
@@ -159,4 +203,3 @@ Configuration readConfiguration(string configFileName)
     }
     return configuration;
 }
-

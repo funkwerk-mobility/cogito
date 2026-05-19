@@ -1,8 +1,10 @@
 module cogito.visitor;
 
 import core.stdc.string;
+import dmd.astenums : VarArg;
 import dmd.ast_node;
 import dmd.astcodegen;
+import dmd.frontend;
 import dmd.visitor;
 import dmd.tokens;
 
@@ -64,8 +66,10 @@ private mixin template VisitorHelper()
 
     private void stepInFunction(T : AST.FuncDeclaration)(T declaration)
     {
-        auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, Meter.Type.callable);
+        auto newMeter = Meter(declaration.ident, declaration.loc.toSourceLoc, Meter.Type.callable,
+            parameterTypes(declaration));
         auto parent = this.parent;
+
         this.parent = &newMeter;
 
         ++this.depth;
@@ -117,6 +121,49 @@ private mixin template VisitorHelper()
     }
 }
 
+private string[] parameterTypes(T : AST.FuncDeclaration)(T declaration)
+{
+    import std.string : fromStringz;
+
+    if (declaration.type is null)
+    {
+        return null;
+    }
+
+    auto functionType = declaration.type.toTypeFunction;
+
+    if (functionType is null)
+    {
+        return null;
+    }
+
+    string[] parameterTypes = null;
+
+    foreach (index, parameter; functionType.parameterList)
+    {
+        if (parameter is null || parameter.type is null)
+        {
+            parameterTypes ~= "?";
+            continue;
+        }
+
+        parameterTypes ~= parameter.type.toChars.fromStringz.idup;
+    }
+
+    final switch (functionType.parameterList.varargs)
+    {
+        case VarArg.none:
+        case VarArg.KRvariadic:
+            break;
+        case VarArg.variadic:
+        case VarArg.typesafe:
+            parameterTypes ~= "...";
+            break;
+    }
+
+    return parameterTypes;
+}
+
 extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
 {
     alias visit = SemanticTimeTransitiveVisitor.visit;
@@ -141,7 +188,7 @@ extern(C++) final class CognitiveVisitor : SemanticTimeTransitiveVisitor
      */
     @property ref List!Meter meter()
     {
-        return this.parent is null ? this.source_.inner : this.parent.inner;
+        return (this.parent is null) ? this.source_.inner : this.parent.inner;
     }
 
     /**

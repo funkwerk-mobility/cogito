@@ -56,6 +56,7 @@ struct ScoreScope
 struct Meter
 {
     private ScoreScope scoreScope;
+    private string[] parameterTypes;
 
     /// Symbol type.
     enum Type
@@ -82,7 +83,7 @@ struct Meter
         this.scoreScope.identifier = identifier;
     }
 
-    @property const(char)[] name()
+    @property const(char)[] name() const
     {
         auto stringName = this.scoreScope.identifier.toString();
 
@@ -133,12 +134,14 @@ struct Meter
      *     identifier = Identifier.
      *     location = Identifier location.
      *     type = Symbol type.
+     *     parameterTypes = Function parameter types (only for functions).
      */
-    public this(Identifier identifier, SourceLoc location, Type type)
+    public this(Identifier identifier, SourceLoc location, Type type, string[] parameterTypes = null)
     {
         this.identifier = identifier;
         this.location = location;
         this.type = type;
+        this.parameterTypes = parameterTypes;
     }
 
     private uint thresholdFor(ref Threshold threshold)
@@ -159,24 +162,19 @@ struct Meter
     ThresholdResult isAbove(Threshold threshold, string[] path)
     {
         const moduleName = path.front;
-        ExcludedModule excludedModule;
-
-        if (moduleName in threshold.configuration.excludedModules)
-        {
-            excludedModule = threshold.configuration.excludedModules[moduleName];
-        }
-        path ~= name.idup;
-        const fullName = path[1 .. $].join('.');
-        const uint* excludedScore = fullName in excludedModule;
+        const symbolPath = (path ~ name.idup)[1 .. $];
+        const configuredThreshold = (this.type == Meter.Type.callable)
+            ? threshold.configuration.lookup(moduleName, symbolPath, this.parameterTypes)
+            : threshold.configuration.lookup(moduleName, symbolPath);
         auto currentThreshold = thresholdFor(threshold);
 
-        if (excludedScore !is null && this.score <= currentThreshold)
+        if (!configuredThreshold.isNull && this.score <= currentThreshold)
         {
             return ThresholdResult.redundant;
         }
-        else if (excludedScore !is null)
+        else if (!configuredThreshold.isNull)
         {
-            currentThreshold = *excludedScore;
+            currentThreshold = configuredThreshold.get;
         }
         if (threshold.noneSet)
         {
@@ -186,6 +184,8 @@ struct Meter
         {
             return this.type == Type.callable ? ThresholdResult.function_ : ThresholdResult.aggregate;
         }
+        path ~= name.idup;
+
         return reduce!((accum, x) => accum == ThresholdResult.success ? x.isAbove(threshold, path) : accum)(
             typeof(return)(), this.inner[]);
     }

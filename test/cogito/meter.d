@@ -1,6 +1,7 @@
 module cogito.tests.meter;
 
 import cogito;
+import cogito.configuration;
 import cogito.list;
 import cogito.meter;
 import std.array;
@@ -21,7 +22,7 @@ unittest
     meters.insert(meter);
 
     auto source = Source(meters, filename);
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = FlatReporter!((string x) => output.put(x))(source);
 
     reporter.report(Threshold(1, 50));
@@ -29,7 +30,7 @@ unittest
     assert(output.data == "filename.d:2: function (λ): 3\n");
 }
 
-@("flat reporter prepends function identifiers with function")
+@("reporter prepends function identifiers with function")
 unittest
 {
     enum string filename = "filename.d";
@@ -40,7 +41,7 @@ unittest
     meters.insert(meter);
 
     auto source = Source(meters, filename);
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = FlatReporter!((string x) => output.put(x))(source);
 
     reporter.report(Threshold(1, 50));
@@ -59,7 +60,7 @@ unittest
     meters.insert(meter);
 
     auto source = Source(meters, filename);
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = FlatReporter!((string x) => output.put(x))(source);
 
     reporter.report(Threshold(1, 2));
@@ -75,7 +76,7 @@ interface I
 {
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
@@ -92,7 +93,7 @@ struct S
 {
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
@@ -109,7 +110,7 @@ class C
 {
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
@@ -128,7 +129,7 @@ union U
     byte b;
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
@@ -145,7 +146,7 @@ template T()
 {
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
@@ -154,7 +155,7 @@ template T()
     assert(output.data.canFind("template T"));
 }
 
-@("FlatReporter reports only functions on function threshold violation")
+@("reports only functions on function threshold violation")
 unittest
 {
     auto meter = runOnCode(q{
@@ -181,7 +182,7 @@ struct S
     }
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
@@ -190,7 +191,7 @@ struct S
     assert(!output.data.canFind("struct S"));
 }
 
-@("FlatReporter reports only functions on function threshold violation if aggregate threshold is set")
+@("reports only functions on function threshold violation if aggregate threshold is set")
 unittest
 {
     auto meter = runOnCode(q{
@@ -217,11 +218,80 @@ struct S
     }
 }
     });
-    auto output = appender!string();
+    auto output = appender!string;
     auto reporter = meter.tryMatch!((Source source) =>
             FlatReporter!((string x) => output.put(x))(source));
 
     reporter.report(Threshold(1, 10));
 
     assert(!output.data.canFind("struct S"));
+}
+
+@("does not report function when function is configured to be excluded")
+unittest
+{
+    auto meter = runOnCode(q{
+module g.h;
+
+void f(char)
+{
+}
+
+void f(bool)
+{
+    if (true)
+    {
+    }
+    else
+    {
+    }
+}
+    });
+
+    Configuration config;
+    config.excludedModules["g.h"] = ExcludedModule();
+    config.excludedModules["g.h"]["f"] = 8;
+
+    auto output = appender!string;
+    auto reporter = meter.tryMatch!((Source source) =>
+            FlatReporter!((string x) => output.put(x))(source));
+
+    reporter.report(Threshold(1, 0, 0, config));
+
+    assert(!output.data.canFind("function f: 2\n"));
+}
+
+@("does not report function when function overload is configured to be excluded")
+unittest
+{
+    auto meter = runOnCode(q{
+module g.h;
+
+void f(char)
+{
+}
+
+void f(bool)
+{
+    if (true)
+    {
+    }
+    else
+    {
+    }
+}
+    });
+
+    Configuration config;
+
+    config.excludedModules["g.h"] = ExcludedModule();
+    config.excludedModules["g.h"]["f(bool)"] = 8;
+
+    auto output = appender!string;
+    auto reporter = meter.tryMatch!((Source source) =>
+            FlatReporter!((string x) => output.put(x))(source));
+
+    reporter.report(Threshold(1, 0, 0, config));
+
+    assert(output.data.empty);
 }
