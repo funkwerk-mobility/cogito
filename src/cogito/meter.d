@@ -162,7 +162,7 @@ struct Meter
     ThresholdResult isAbove(Threshold threshold, string[] path)
     {
         const moduleName = path.front;
-        const symbolPath = (path ~ [name.idup])[1 .. $];
+        const symbolPath = (path ~ name.idup)[1 .. $];
         const configuredThreshold = (this.type == Meter.Type.callable)
             ? threshold.configuration.lookup(moduleName, symbolPath, this.parameterTypes)
             : threshold.configuration.lookup(moduleName, symbolPath);

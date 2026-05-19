@@ -125,20 +125,19 @@ private string[] parameterTypes(T : AST.FuncDeclaration)(T declaration)
 {
     import std.string : fromStringz;
 
-    string[] parameterTypes = null;
-
     if (declaration.type is null)
     {
-        return parameterTypes;
+        return null;
     }
 
     auto functionType = declaration.type.toTypeFunction;
 
     if (functionType is null)
     {
-        return parameterTypes;
+        return null;
     }
 
+    string[] parameterTypes = null;
 
     foreach (index, parameter; functionType.parameterList)
     {
@@ -147,6 +146,7 @@ private string[] parameterTypes(T : AST.FuncDeclaration)(T declaration)
             parameterTypes ~= "?";
             continue;
         }
+
         parameterTypes ~= parameter.type.toChars.fromStringz.idup;
     }
 
