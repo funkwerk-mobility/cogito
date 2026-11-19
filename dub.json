@@ -7,7 +7,7 @@
 			"mainSourceFile": "src/main.d",
 			"name": "executable",
 			"targetType": "executable",
-			"preBuildCommands": ["$DC -run dubhash.d -- build/dubhast.txt"]
+			"preBuildCommands": ["$DC -run dubhash.d build/dubhash.txt"]
 		},
 		{
 			"dependencies": {
