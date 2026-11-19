@@ -7,10 +7,7 @@
 			"mainSourceFile": "src/main.d",
 			"name": "executable",
 			"targetType": "executable",
-			"preBuildCommands": [
-				"mkdir -p build",
-				"git describe --always > build/githash.txt"
-			]
+			"preBuildCommands": ["$DC -run dubhash.d build/dubhash.txt"]
 		},
 		{
 			"dependencies": {

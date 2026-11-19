@@ -52,7 +52,7 @@ int printVersion()
     import std.json : parseJSON;
     import std.string : strip;
 
-    writeln("cōgitō " ~ import("build/githash.txt").strip);
+    writeln("cōgitō " ~ import("build/dubhash.txt").strip);
     writeln("  DMD frontend " ~ import("dub.selections.json").parseJSON["versions"]["dmd"].str);
     return 0;
 }
